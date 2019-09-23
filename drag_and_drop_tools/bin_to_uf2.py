@@ -8,6 +8,8 @@ import os
 import os.path
 import argparse
 
+
+inputFile = sys.argv[1]
 UF2_MAGIC_START0 = 0x0A324655 # "UF2\n"
 UF2_MAGIC_START1 = 0x9E5D5157 # Randomly selected
 UF2_MAGIC_END    = 0x0AB16F30 # Ditto
@@ -186,7 +188,7 @@ def getdrives():
     return filter(hasInfo, drives)
 
 def boardID(path):
-    with open(path + INFO_FILE, mode='r') as file:
+    with open(inputFile, mode='r') as file:
         fileContent = file.read()
     return re.search("Board-ID: ([^\r\n]*)", fileContent).group(1)
  
@@ -250,12 +252,9 @@ def main():
             outbuf = convertToUF2(inpbuf)
         print("Converting to %s, output size: %d, start address: 0x%x" % (ext, len(outbuf), appstartaddr))
 
-        if args.convert:
-            drives = []
-            if args.output == None:
-                args.output = "flash." + ext
-        else:
-            drives = getdrives()
+        drives = []
+        if args.output == None:
+            args.output = os.path.splitext(inputFile)[0] + "." + ext
         
         if args.output:
             writeFile(args.output, outbuf)

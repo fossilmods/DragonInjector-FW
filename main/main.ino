@@ -1,36 +1,40 @@
 #include "fuseegelee.h"
-#include "dragonboot.h"
+#include "dragonboot_lz4.h"
 #include <Arduino.h>
-
-int bootloader_mode_timer;
-int bootloader_delay = 5; //BOOTLOADER MODE DELAY IN SECONDS
-uint32_t currentSlot = 0xFF;
-
+//#include "Adafruit_FreeTouch.h"
 #define DBL_TAP_MAGIC 0xf01669ef
 #define DBL_TAP_PTR ((volatile uint32_t *)(HMCRAMC0_ADDR + HMCRAMC0_SIZE - 4))
 
+//Adafruit_FreeTouch qt_1 = Adafruit_FreeTouch(A3, OVERSAMPLE_4, RESISTOR_0, FREQ_MODE_NONE);
+int bootloader_mode_timer;
+int bootloader_delay = 10; //BOOTLOADER MODE DELAY IN SECONDS
+int32_t currentSlot = 0;  //0 = Single, 1-8 = Multi
+//int capvalue;
+
 void setup()
 {
-  volatile char DI_VERSION[] = "DI_FW_0.10"; // FIRMWARE VERSION
-  pinMode(3 , OUTPUT);
-  pinMode(4 , OUTPUT);
-  digitalWrite(3, LOW); // BLUE OFF
-  digitalWrite(4, LOW); // RED OFF
+//  qt_1.begin();
+  volatile char DI_VERSION[] = "DI_FW_0.20"; // FIRMWARE VERSION
+  pinMode(0 , OUTPUT);
+  pinMode(2 , OUTPUT);
+  digitalWrite(0, LOW); // RED OFF
+  digitalWrite(2, LOW); // BLUE OFF
 }
 
 void loop()
 {   
   while (!searchTegraDevice())
   {
-    digitalWrite(4, HIGH); // FLASH BLUE LED WHILE SEARCHING FOR RCM
+    //qt_1.measure();
+    digitalWrite(0, HIGH);
     delay(20);
-    digitalWrite(4, LOW);
+    digitalWrite(0, LOW);
     delay(180);
     bootloader_mode_timer++;
     if (bootloader_mode_timer > (bootloader_delay * 5)) resetToBootloader(); // REBOOT TO BOOTLOADER AFTER DELAY IF NO RCM FOUND
   }
 
-  digitalWrite(4, LOW); // BLUE OFF
+  digitalWrite(0, LOW);
   setupTegraDevice();
   sendPayload(fuseeBin, FUSEE_BIN_SIZE, currentSlot);
   launchPayload();
@@ -51,15 +55,15 @@ void resetToBootloader() {
 
 void successConfirmation() {
   delay(80);
-  digitalWrite(4, HIGH);
+  digitalWrite(0, HIGH);
   delay(20);
-  digitalWrite(4, LOW);
+  digitalWrite(0, LOW);
   delay(80);
-  digitalWrite(4, HIGH);
+  digitalWrite(0, HIGH);
   delay(20);
-  digitalWrite(4, LOW);
+  digitalWrite(0, LOW);
   delay(80);
-  digitalWrite(4, HIGH);
+  digitalWrite(0, HIGH);
   delay(20);
-  digitalWrite(4, LOW);
+  digitalWrite(0, LOW);
 }
